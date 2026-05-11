@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type MaiMaiMusicData struct {
@@ -110,4 +111,50 @@ func SelectSongByFilter(tx *gorm.DB,
 
 	query.Offset((page - 1) * pageSize).Limit(pageSize).Find(&musicDataList)
 	return musicDataList, total, nil
+}
+
+// ------------------------------------------------------------
+
+type FromList struct {
+	From      string    `json:"from" gorm:"primaryKey;index"`
+	CreatedAt time.Time `json:"created_at" gorm:"autoCreateTime"`
+	UpdatedAt time.Time `json:"updated_at" gorm:"autoUpdateTime"`
+}
+
+func (FromList) TableName() string {
+	return "from_list"
+}
+
+type GenreList struct {
+	Genre     string    `json:"genre" gorm:"primaryKey;index"`
+	CreatedAt time.Time `json:"created_at" gorm:"autoCreateTime"`
+	UpdatedAt time.Time `json:"updated_at" gorm:"autoUpdateTime"`
+}
+
+func (GenreList) TableName() string {
+	return "genre_list"
+}
+
+func GetFromList(tx *gorm.DB) ([]FromList, error) {
+	var fromList []FromList
+	if err := tx.Model(&FromList{}).Find(&fromList).Error; err != nil {
+		return nil, err
+	}
+	return fromList, nil
+}
+
+func InsertFromListIfNotExists(tx *gorm.DB, fromList []FromList) error {
+	return tx.Model(&FromList{}).Clauses(clause.OnConflict{DoNothing: true}).Create(&fromList).Error
+}
+
+func GetGenreList(tx *gorm.DB) ([]GenreList, error) {
+	var genreList []GenreList
+	if err := tx.Model(&GenreList{}).Find(&genreList).Error; err != nil {
+		return nil, err
+	}
+	return genreList, nil
+}
+
+func InsertGenreListIfNotExists(tx *gorm.DB, genreList []GenreList) error {
+	return tx.Model(&GenreList{}).Clauses(clause.OnConflict{DoNothing: true}).Create(&genreList).Error
 }

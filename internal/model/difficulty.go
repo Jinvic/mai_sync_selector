@@ -110,15 +110,19 @@ func (c *Cids) Scan(value interface{}) error {
 
 // ------------------------------------------------------------
 
+var LevelList = []string{}
 var LevelSortMap map[string]int
 
 func init() {
+	LevelList = []string{}
 	LevelSortMap = make(map[string]int)
 	LevelSortMap["0"] = 0
 
 	for i := 0; i <= 15; i++ {
 		level := strconv.Itoa(i)
 		levelPlus := level + "+"
+		LevelList = append(LevelList, level)
+		LevelList = append(LevelList, levelPlus)
 		LevelSortMap[level] = i*2 + 1     // 1,3,5...
 		LevelSortMap[levelPlus] = i*2 + 2 // 2,4,6...
 	}
@@ -128,7 +132,7 @@ func LevelSortFunc(level1 string, level2 string) int {
 	return LevelSortMap[level1] - LevelSortMap[level2]
 }
 
-func GetLevelList(minLevel string, maxLevel string) []string {
+func GetLevelRange(minLevel string, maxLevel string) []string {
 	if minLevel == "" || maxLevel == "" {
 		return []string{}
 	}

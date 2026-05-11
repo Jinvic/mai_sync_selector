@@ -16,7 +16,7 @@ func SelectSong(request dto.SelectSongRequest) (dto.SelectSongResponse, error) {
 	}
 
 	filter := combineFilter(request.Filter1, request.Filter2)
-	levelList := model.GetLevelList(filter.MinLevel, filter.MaxLevel)
+	levelList := model.GetLevelRange(filter.MinLevel, filter.MaxLevel)
 	musicDataList, total, err := model.SelectSongByFilter(db.DB, filter.FromList, filter.GenreList, filter.MinDS, filter.MaxDS, levelList, request.Page, request.PageSize)
 	if err != nil {
 		return dto.SelectSongResponse{}, err
