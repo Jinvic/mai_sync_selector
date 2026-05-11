@@ -3,6 +3,7 @@ package model
 import (
 	"database/sql/driver"
 	"encoding/json"
+	"strconv"
 )
 
 var DifficultyList = []string{"basic", "advanced", "expert", "master", "re_master"}
@@ -105,4 +106,38 @@ func (c *Cids) Scan(value interface{}) error {
 	}
 
 	return json.Unmarshal(bytes, c)
+}
+
+// ------------------------------------------------------------
+
+var LevelSortMap map[string]int
+
+func init() {
+	LevelSortMap = make(map[string]int)
+	LevelSortMap["0"] = 0
+
+	for i := 0; i <= 15; i++ {
+		level := strconv.Itoa(i)
+		levelPlus := level + "+"
+		LevelSortMap[level] = i*2 + 1     // 1,3,5...
+		LevelSortMap[levelPlus] = i*2 + 2 // 2,4,6...
+	}
+}
+
+func LevelSortFunc(level1 string, level2 string) int {
+	return LevelSortMap[level1] - LevelSortMap[level2]
+}
+
+func GetLevelList(minLevel string, maxLevel string) []string {
+	if minLevel == "" || maxLevel == "" {
+		return []string{}
+	}
+
+	levelList := make([]string, 0)
+	for level := range LevelSortMap {
+		if LevelSortFunc(level, minLevel) >= 0 && LevelSortFunc(level, maxLevel) <= 0 {
+			levelList = append(levelList, level)
+		}
+	}
+	return levelList
 }

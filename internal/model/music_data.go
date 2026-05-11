@@ -61,12 +61,12 @@ func BatchFromDivingFish(musicDataList []divingfish.MaiMaiMusicData) []MaiMaiMus
 }
 
 // BatchUpsert 批量插入或更新
-func BatchUpsert(db *gorm.DB, dataList []MaiMaiMusicData) error {
+func BatchUpsert(tx *gorm.DB, dataList []MaiMaiMusicData) error {
 	if len(dataList) == 0 {
 		return nil
 	}
 
-	return db.Transaction(func(tx *gorm.DB) error {
+	return tx.Transaction(func(tx *gorm.DB) error {
 		for i := range dataList {
 			// 使用 Save 自动判断插入或更新
 			if err := tx.Save(&dataList[i]).Error; err != nil {
@@ -75,4 +75,39 @@ func BatchUpsert(db *gorm.DB, dataList []MaiMaiMusicData) error {
 		}
 		return nil
 	})
+}
+
+// 根据过滤条件查询歌曲
+func SelectSongByFilter(tx *gorm.DB,
+	fromList []string,
+	genreList []string,
+	minDS float64,
+	maxDS float64,
+	levelList []string,
+	page int,
+	pageSize int) (musicDataList []MaiMaiMusicData, total int64, err error) {
+	query := tx.Model(&MaiMaiMusicData{})
+	if len(fromList) > 0 {
+		query = query.Where("from IN (?)", fromList)
+	}
+	if len(genreList) > 0 {
+		query = query.Where("genre IN (?)", genreList)
+	}
+	if minDS > 0 {
+		query = query.Where("ds >= ?", minDS)
+	}
+	if maxDS > 0 {
+		query = query.Where("ds <= ?", maxDS)
+	}
+	if len(levelList) > 0 {
+		query = query.Where("level IN (?)", levelList)
+	}
+
+	err = query.Session(&gorm.Session{}).Count(&total).Error
+	if err != nil {
+		return nil, 0, err
+	}
+
+	query.Offset((page - 1) * pageSize).Limit(pageSize).Find(&musicDataList)
+	return musicDataList, total, nil
 }
