@@ -7,7 +7,7 @@ import (
 	"github.com/robfig/cron/v3"
 )
 
-func StartCron() {
+func StartCron() *cron.Cron {
 	c := cron.New()
 	// 每周一凌晨3点
 	c.AddFunc("0 3 * * 1", func() {
@@ -17,4 +17,5 @@ func StartCron() {
 		}
 	})
 	c.Start()
+	return c
 }
