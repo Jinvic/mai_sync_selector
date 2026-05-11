@@ -1,7 +1,9 @@
 package handler
 
 import (
+	"mai_sync_selector/internal/db"
 	"mai_sync_selector/internal/dto"
+	"mai_sync_selector/internal/model"
 	"mai_sync_selector/internal/service"
 
 	"github.com/gin-gonic/gin"
@@ -20,4 +22,32 @@ func SelectSong(c *gin.Context) {
 		return
 	}
 	SuccessWithData(c, response)
+}
+
+func GetFromList(c *gin.Context) {
+	fromList, err := model.GetFromList(db.DB)
+	if err != nil {
+		Failed(c, err)
+		return
+	}
+	SuccessWithData(c, gin.H{
+		"from_list": fromList,
+	})
+}
+
+func GetGenreList(c *gin.Context) {
+	genreList, err := model.GetGenreList(db.DB)
+	if err != nil {
+		Failed(c, err)
+		return
+	}
+	SuccessWithData(c, gin.H{
+		"genre_list": genreList,
+	})
+}
+
+func GetLevelList(c *gin.Context) {
+	SuccessWithData(c, gin.H{
+		"level_list": model.LevelList,
+	})
 }
