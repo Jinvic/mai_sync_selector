@@ -12,11 +12,12 @@ type MaiMaiMusicData struct {
 	ID string `gorm:"primaryKey;type:varchar(100);not null;comment:音乐ID" json:"id"`
 
 	// 基础信息
-	Title  string `gorm:"type:varchar(500);index:idx_title;comment:标题" json:"title"`
-	Type   string `gorm:"type:varchar(50);index:idx_type;default:'';comment:类型" json:"type"`
-	Artist string `gorm:"type:varchar(200);index:idx_artist;comment:艺术家" json:"artist"`
-	Genre  string `gorm:"type:varchar(100);index:idx_genre;comment:流派" json:"genre"`
-	From   string `gorm:"type:varchar(50);index:idx_from;default:'';comment:来源" json:"from"`
+	Title    string `gorm:"type:varchar(500);index:idx_title;comment:标题" json:"title"`
+	Type     string `gorm:"type:varchar(50);index:idx_type;default:'';comment:类型" json:"type"`
+	Artist   string `gorm:"type:varchar(200);index:idx_artist;comment:艺术家" json:"artist"`
+	Genre    string `gorm:"type:varchar(100);index:idx_genre;comment:流派" json:"genre"`
+	From     string `gorm:"type:varchar(50);index:idx_from;default:'';comment:来源" json:"from"`
+	CoverURL string `gorm:"type:varchar(500);index:idx_cover_url;comment:封面URL" json:"cover_url"`
 
 	// JSON 存储字段
 	DS    DS    `gorm:"type:text;comment:难度定数数据" json:"ds"`
@@ -40,6 +41,7 @@ func (m *MaiMaiMusicData) FromDivingFish(musicData divingfish.MaiMaiMusicData) {
 	m.ID = musicData.ID
 	m.Title = musicData.Title
 	m.Type = musicData.Type
+	m.CoverURL = divingfish.GetCoverUrl(musicData.ID)
 	m.DS = mapByDifficulty(musicData.DS, musicData.BasicInfo.Genre)
 	m.Level = mapByDifficulty(musicData.Level, musicData.BasicInfo.Genre)
 	m.Cids = mapByDifficulty(musicData.Cids, musicData.BasicInfo.Genre)
