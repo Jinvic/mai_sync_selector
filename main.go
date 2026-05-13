@@ -36,6 +36,10 @@ func main() {
 	router := gin.New()
 	router.Use(gin.Logger(), gin.Recovery())
 	router.GET("/sync-data", handler.SyncData)
+	router.GET("/select-song", handler.SelectSong)
+	router.GET("/from", handler.GetFromList)
+	router.GET("/genre", handler.GetGenreList)
+	router.GET("/level", handler.GetLevelList)
 
 	srv := &http.Server{
 		Addr:              fmt.Sprintf(":%s", port),

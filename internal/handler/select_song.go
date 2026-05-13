@@ -41,6 +41,15 @@ func GetGenreList(c *gin.Context) {
 		Failed(c, err)
 		return
 	}
+
+	// 去掉宴会場
+	for i, genre := range genreList {
+		if genre.Genre == "宴会場" {
+			genreList = append(genreList[:i], genreList[i+1:]...)
+			break
+		}
+	}
+
 	SuccessWithData(c, gin.H{
 		"genre_list": genreList,
 	})

@@ -88,6 +88,10 @@ func SelectSongByFilter(tx *gorm.DB,
 	page int,
 	pageSize int) (musicDataList []MaiMaiMusicData, total int64, err error) {
 	query := tx.Model(&MaiMaiMusicData{})
+
+	// 宴会場不参与筛选
+	query = query.Where("genre != '宴会場'")
+
 	if len(fromList) > 0 {
 		query = query.Where("from IN (?)", fromList)
 	}
@@ -95,13 +99,19 @@ func SelectSongByFilter(tx *gorm.DB,
 		query = query.Where("genre IN (?)", genreList)
 	}
 	if minDS > 0 {
-		query = query.Where("ds >= ?", minDS)
+		for _, difficulty := range DifficultyList {
+			query = query.Where("ds->>? >= ?", difficulty, minDS)
+		}
 	}
 	if maxDS > 0 {
-		query = query.Where("ds <= ?", maxDS)
+		for _, difficulty := range DifficultyList {
+			query = query.Where("ds->>? <= ?", difficulty, maxDS)
+		}
 	}
 	if len(levelList) > 0 {
-		query = query.Where("level IN (?)", levelList)
+		for _, difficulty := range DifficultyList {
+			query = query.Where("level->>? IN (?)", difficulty, levelList)
+		}
 	}
 
 	err = query.Session(&gorm.Session{}).Count(&total).Error
@@ -116,7 +126,7 @@ func SelectSongByFilter(tx *gorm.DB,
 // ------------------------------------------------------------
 
 type FromList struct {
-	From      string    `json:"from" gorm:"primaryKey;index"`
+	From      string    `json:"from" gorm:"primaryKey;uniqueIndex"`
 	CreatedAt time.Time `json:"created_at" gorm:"autoCreateTime"`
 	UpdatedAt time.Time `json:"updated_at" gorm:"autoUpdateTime"`
 }
@@ -126,7 +136,7 @@ func (FromList) TableName() string {
 }
 
 type GenreList struct {
-	Genre     string    `json:"genre" gorm:"primaryKey;index"`
+	Genre     string    `json:"genre" gorm:"primaryKey;uniqueIndex"`
 	CreatedAt time.Time `json:"created_at" gorm:"autoCreateTime"`
 	UpdatedAt time.Time `json:"updated_at" gorm:"autoUpdateTime"`
 }
