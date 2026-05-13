@@ -44,7 +44,7 @@ func GetGenreList(c *gin.Context) {
 
 	// 去掉宴会場
 	for i, genre := range genreList {
-		if genre.Genre == "宴会場" {
+		if genre == "宴会場" {
 			genreList = append(genreList[:i], genreList[i+1:]...)
 			break
 		}

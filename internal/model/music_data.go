@@ -145,9 +145,9 @@ func (GenreList) TableName() string {
 	return "genre_list"
 }
 
-func GetFromList(tx *gorm.DB) ([]FromList, error) {
-	var fromList []FromList
-	if err := tx.Model(&FromList{}).Find(&fromList).Error; err != nil {
+func GetFromList(tx *gorm.DB) ([]string, error) {
+	var fromList []string
+	if err := tx.Model(&FromList{}).Pluck("from", &fromList).Error; err != nil {
 		return nil, err
 	}
 	return fromList, nil
@@ -157,9 +157,9 @@ func InsertFromListIfNotExists(tx *gorm.DB, fromList []FromList) error {
 	return tx.Model(&FromList{}).Clauses(clause.OnConflict{DoNothing: true}).Create(&fromList).Error
 }
 
-func GetGenreList(tx *gorm.DB) ([]GenreList, error) {
-	var genreList []GenreList
-	if err := tx.Model(&GenreList{}).Find(&genreList).Error; err != nil {
+func GetGenreList(tx *gorm.DB) ([]string, error) {
+	var genreList []string
+	if err := tx.Model(&GenreList{}).Pluck("genre", &genreList).Error; err != nil {
 		return nil, err
 	}
 	return genreList, nil
