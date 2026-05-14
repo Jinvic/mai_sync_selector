@@ -40,6 +40,9 @@ func main() {
 	router.GET("/from", handler.GetFromList)
 	router.GET("/genre", handler.GetGenreList)
 	router.GET("/level", handler.GetLevelList)
+	router.GET("/", func(c *gin.Context) {
+		c.File("select.html")
+	})
 
 	srv := &http.Server{
 		Addr:              fmt.Sprintf(":%s", port),
