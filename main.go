@@ -33,8 +33,8 @@ func main() {
 	model.InitTables(db.DB)
 	cronScheduler := service.StartCron()
 
-	router := gin.New()
 	gin.SetMode(gin.ReleaseMode)
+	router := gin.New()
 	router.Use(gin.Logger(), gin.Recovery())
 	router.GET("/sync-data", handler.SyncData)
 	router.POST("/select-song", handler.SelectSong)
