@@ -118,7 +118,7 @@ func init() {
 	LevelSortMap = make(map[string]int)
 	LevelSortMap["0"] = 0
 
-	for i := 0; i <= 15; i++ {
+	for i := 1; i <= 15; i++ {
 		level := strconv.Itoa(i)
 		levelPlus := level + "+"
 		LevelList = append(LevelList, level)

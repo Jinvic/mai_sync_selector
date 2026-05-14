@@ -1,7 +1,7 @@
 const API_BASE = '/api';
 const DIFFICULTIES = ['basic', 'advanced', 'expert', 'master', 're_master'];
 const LEVELS = [];
-for (let i = 0; i <= 15; i++) {
+for (let i = 1; i <= 15; i++) {
   LEVELS.push(String(i));
   LEVELS.push(i + '+');
 }
