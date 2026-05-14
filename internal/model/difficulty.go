@@ -133,8 +133,11 @@ func LevelSortFunc(level1 string, level2 string) int {
 }
 
 func GetLevelRange(minLevel string, maxLevel string) []string {
-	if minLevel == "" || maxLevel == "" {
-		return []string{}
+	if minLevel == "" {
+		minLevel = "0"
+	}
+	if maxLevel == "" {
+		maxLevel = "15+"
 	}
 
 	levelList := make([]string, 0)

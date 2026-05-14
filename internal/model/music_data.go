@@ -2,6 +2,7 @@ package model
 
 import (
 	"mai_sync_selector/divingfish"
+	"strings"
 	"time"
 
 	"gorm.io/gorm"
@@ -78,16 +79,24 @@ func BatchUpsert(tx *gorm.DB, dataList []MaiMaiMusicData) error {
 	})
 }
 
+type DsFilter struct {
+	MinDS float64
+	MaxDS float64
+}
+
+type LevelFilter struct {
+	LevelRange []string
+}
+
 // 根据过滤条件查询歌曲
 func SelectSongByFilter(tx *gorm.DB,
 	fromList []string,
 	genreList []string,
-	minDS float64,
-	maxDS float64,
-	levelList []string,
+	dsFilters []DsFilter,
+	levelFilters []LevelFilter,
 	page int,
 	pageSize int) (musicDataList []MaiMaiMusicData, total int64, err error) {
-	query := tx.Model(&MaiMaiMusicData{})
+	query := tx.Debug().Model(&MaiMaiMusicData{})
 
 	// 宴会場不参与筛选
 	query = query.Where("genre != '宴会場'")
@@ -98,20 +107,25 @@ func SelectSongByFilter(tx *gorm.DB,
 	if len(genreList) > 0 {
 		query = query.Where("genre IN (?)", genreList)
 	}
-	if minDS > 0 {
+
+	for _, dsFilter := range dsFilters {
+		parts := make([]string, 0, len(DifficultyList))
+		args := make([]interface{}, 0, len(DifficultyList)*2)
 		for _, difficulty := range DifficultyList {
-			query = query.Where("ds->>? >= ?", difficulty, minDS)
+			parts = append(parts, "(ds->>? >= ? AND ds->>? <= ?) ")
+			args = append(args, difficulty, dsFilter.MinDS, difficulty, dsFilter.MaxDS)
 		}
+		query = query.Where("("+strings.Join(parts, " OR ")+")", args...)
 	}
-	if maxDS > 0 {
+
+	for _, levelFilter := range levelFilters {
+		parts := make([]string, 0, len(DifficultyList))
+		args := make([]interface{}, 0, len(DifficultyList)*2)
 		for _, difficulty := range DifficultyList {
-			query = query.Where("ds->>? <= ?", difficulty, maxDS)
+			parts = append(parts, "level->>? IN (?) ")
+			args = append(args, difficulty, levelFilter.LevelRange)
 		}
-	}
-	if len(levelList) > 0 {
-		for _, difficulty := range DifficultyList {
-			query = query.Where("level->>? IN (?)", difficulty, levelList)
-		}
+		query = query.Where("("+strings.Join(parts, " OR ")+")", args...)
 	}
 
 	err = query.Session(&gorm.Session{}).Count(&total).Error
