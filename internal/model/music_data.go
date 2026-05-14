@@ -102,7 +102,7 @@ func SelectSongByFilter(tx *gorm.DB,
 	query = query.Where("genre != '宴会場'")
 
 	if len(fromList) > 0 {
-		query = query.Where("from IN (?)", fromList)
+		query = query.Where("`from` IN (?)", fromList)
 	}
 	if len(genreList) > 0 {
 		query = query.Where("genre IN (?)", genreList)
