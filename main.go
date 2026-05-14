@@ -18,6 +18,8 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+const version = "v1.1.2"
+
 func main() {
 	dbPath := "sqlite.db"
 	if v := os.Getenv("DB_PATH"); v != "" {
@@ -43,6 +45,11 @@ func main() {
 	router.GET("/genre", handler.GetGenreList)
 	router.GET("/level", handler.GetLevelList)
 	router.GET("/", gin.WrapH(serveFrontend()))
+	router.GET("/version", func(c *gin.Context) {
+		handler.SuccessWithData(c, gin.H{
+			"version": version,
+		})
+	})
 
 	srv := &http.Server{
 		Addr:              fmt.Sprintf(":%s", port),
