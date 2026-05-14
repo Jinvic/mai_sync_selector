@@ -250,7 +250,7 @@
     .ds-cell, .level-cell { font-variant-numeric: tabular-nums; font-size: 12px; }
     .ds-cell { color: var(--accent-ds); }
     .level-cell { color: var(--accent-level); }
-    .bpm-cell, .from-cell, .genre-cell { color: var(--text-secondary); font-size: 12px; }
+    .bpm-cell, .from-cell, .genre-cell, .type-cell { color: var(--text-secondary); font-size: 12px; }
     .genre-cell { max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
     .level-badge {
@@ -423,6 +423,7 @@
           <button class="col-toggle-btn active" data-col="bpm">BPM</button>
           <button class="col-toggle-btn active" data-col="from">版本</button>
           <button class="col-toggle-btn active" data-col="genre">曲包</button>
+          <button class="col-toggle-btn active" data-col="type">类型</button>
         </div>
       </div>
       <table class="song-table">
@@ -436,10 +437,11 @@
             <th data-col="bpm">BPM</th>
             <th data-col="from">版本</th>
             <th data-col="genre">曲包</th>
+            <th data-col="type">类型</th>
           </tr>
         </thead>
         <tbody id="songTableBody">
-          <tr class="loading-row"><td colspan="8">加载中...</td></tr>
+          <tr class="loading-row"><td colspan="9">加载中...</td></tr>
         </tbody>
       </table>
       <div class="pagination">
@@ -473,7 +475,7 @@
       page: 1,
       pageSize: 20,
       total: 0,
-      columns: { cover: true, title: true, artist: true, ds: true, level: true, bpm: true, from: true, genre: true }
+      columns: { cover: true, title: true, artist: true, ds: true, level: true, bpm: true, from: true, genre: true, type: true }
     };
 
     let debounceTimer = null;
@@ -506,7 +508,7 @@
         page: state.page,
         page_size: state.pageSize
       };
-      document.getElementById('songTableBody').innerHTML = '<tr class="loading-row"><td colspan="8">加载中...</td></tr>';
+      document.getElementById('songTableBody').innerHTML = '<tr class="loading-row"><td colspan="9">加载中...</td></tr>';
       api('/select-song', { method: 'POST', body: JSON.stringify(body) })
         .then(data => {
           if (data.status === 1 && data.data) {
@@ -515,18 +517,18 @@
             renderPagination();
           } else {
             const errMsg = data.msg || data.error || JSON.stringify(data);
-            document.getElementById('songTableBody').innerHTML = '<tr class="empty-row"><td colspan="8">加载失败: ' + errMsg + '</td></tr>';
+            document.getElementById('songTableBody').innerHTML = '<tr class="empty-row"><td colspan="9">加载失败: ' + errMsg + '</td></tr>';
           }
         })
         .catch(() => {
-          document.getElementById('songTableBody').innerHTML = '<tr class="empty-row"><td colspan="8">网络错误</td></tr>';
+          document.getElementById('songTableBody').innerHTML = '<tr class="empty-row"><td colspan="9">网络错误</td></tr>';
         });
     }
 
     function renderSongList(songs) {
       const tbody = document.getElementById('songTableBody');
       if (!songs || songs.length === 0) {
-        tbody.innerHTML = '<tr class="empty-row"><td colspan="8">没有找到符合条件的歌曲</td></tr>';
+        tbody.innerHTML = '<tr class="empty-row"><td colspan="9">没有找到符合条件的歌曲</td></tr>';
         return;
       }
       tbody.innerHTML = songs.map(song => {
@@ -549,6 +551,7 @@
           ${col('bpm', `<span class="bpm-cell">${song.bpm || '-'}</span>`)}
           ${col('from', `<span class="from-cell">${song.from || '-'}</span>`)}
           ${col('genre', `<span class="genre-cell">${song.genre}</span>`)}
+          ${col('type', `<span class="type-cell">${song.type || '-'}</span>`)}
         </tr>`;
       }).join('');
     }
@@ -698,7 +701,7 @@
         renderLevelSelects();
         fetchSongs();
       }).catch(() => {
-        document.getElementById('songTableBody').innerHTML = '<tr class="empty-row"><td colspan="8">加载元数据失败，请刷新页面</td></tr>';
+        document.getElementById('songTableBody').innerHTML = '<tr class="empty-row"><td colspan="9">加载元数据失败，请刷新页面</td></tr>';
       });
     }
 
