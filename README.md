@@ -56,18 +56,18 @@ docker-compose up -d
 ```json
 {
   "filter1": {
-    "from_list": ["maimai"],
-    "genre_list": ["NIGHTMARE"],
-    "min_ds": 1.0,
-    "max_ds": 15.0,
-    "min_level": "1",
-    "max_level": "15+"
-  },
-  "filter2": {
     "from_list": [],
-    "genre_list": [],
+    "genre_list": ["niconico & VOCALOID"],
     "min_ds": 1.0,
     "max_ds": 15.9,
+    "min_level": "11+",
+    "max_level": "12+"
+  },
+  "filter2": {
+    "from_list": ["maimai でらっくす PRiSM"],
+    "genre_list": [],
+    "min_ds": 12.9,
+    "max_ds": 13.9,
     "min_level": "",
     "max_level": ""
   },
