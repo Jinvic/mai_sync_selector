@@ -96,7 +96,7 @@ func SelectSongByFilter(tx *gorm.DB,
 	levelFilters []LevelFilter,
 	page int,
 	pageSize int) (musicDataList []MaiMaiMusicData, total int64, err error) {
-	query := tx.Debug().Model(&MaiMaiMusicData{})
+	query := tx.Model(&MaiMaiMusicData{})
 
 	// 宴会場不参与筛选
 	query = query.Where("genre != '宴会場'")

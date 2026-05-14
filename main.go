@@ -34,6 +34,7 @@ func main() {
 	cronScheduler := service.StartCron()
 
 	router := gin.New()
+	gin.SetMode(gin.ReleaseMode)
 	router.Use(gin.Logger(), gin.Recovery())
 	router.GET("/sync-data", handler.SyncData)
 	router.POST("/select-song", handler.SelectSong)
