@@ -163,20 +163,26 @@ body {
   display: flex;
   align-items: center;
   gap: 8px;
+  width: 100%;
+}
+.range-sep {
+  flex-shrink: 0;
+  color: var(--text-muted);
+  font-size: 13px;
 }
 .range-input {
-  flex: 1;
+  flex: 1 1 0;
+  min-width: 0;
+  width: 100%;
   padding: 6px 10px;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   background: var(--bg-elevated);
   color: var(--text-primary);
   font-size: 13px;
-  width: 80px;
   text-align: center;
 }
 .range-input:focus { outline: none; border-color: var(--accent); }
-.range-sep { color: var(--text-muted); font-size: 13px; }
 .range-slider {
   flex: 1;
   -webkit-appearance: none;
@@ -195,13 +201,15 @@ body {
 }
 
 .level-select {
+  flex: 1 1 0;
+  min-width: 0;
+  width: 100%;
   padding: 6px 10px;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   background: var(--bg-elevated);
   color: var(--text-primary);
   font-size: 13px;
-  min-width: 70px;
 }
 .level-select:focus { outline: none; border-color: var(--accent); }
 
