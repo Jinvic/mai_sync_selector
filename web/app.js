@@ -197,7 +197,7 @@ function setupEventListeners() {
         btn.classList.add('active');
         state.columns[col] = true;
         document.querySelectorAll(`th[data-col="${col}"], td[data-col="${col}"]`).forEach(el => {
-          el.style.display = '';
+          el.style.display = 'table-cell';
         });
       }
     });
