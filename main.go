@@ -18,7 +18,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-const version = "v1.1.2"
+const version = "v1.2.0"
 
 func main() {
 	dbPath := "sqlite.db"
