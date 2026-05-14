@@ -32,6 +32,7 @@ func main() {
 	db.InitDB(dbPath)
 	model.InitTables(db.DB)
 	cronScheduler := service.StartCron()
+	service.SyncData(context.Background())
 
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.New()
