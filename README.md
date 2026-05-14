@@ -43,13 +43,16 @@ docker-compose up -d
 
 ## API
 
+所有接口均位于路径前缀 **`/api`** 下。
+
 | 接口 | 方法 | 说明 |
 |------|------|------|
-| `/sync-data` | GET | 手动同步歌曲数据 |
-| `/select-song` | POST | 筛选歌曲 |
-| `/from` | GET | 获取版本列表 |
-| `/genre` | GET | 获取曲包列表 |
-| `/level` | GET | 获取等级列表 |
+| `/api/sync-data` | GET | 手动同步歌曲数据 |
+| `/api/select-song` | POST | 筛选歌曲 |
+| `/api/from` | GET | 获取版本列表 |
+| `/api/genre` | GET | 获取曲包列表 |
+| `/api/level` | GET | 获取等级列表 |
+| `/api/version` | GET | 获取服务版本号 |
 
 ### 筛选请求示例
 

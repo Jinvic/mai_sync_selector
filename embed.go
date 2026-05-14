@@ -1,14 +1,14 @@
 package main
 
-import _ "embed"
-import "net/http"
+import (
+	"embed"
+	"path"
+)
 
-//go:embed select.html
-var frontendHTML []byte
+//go:embed web
+var webFS embed.FS
 
-func serveFrontend() http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "text/html; charset=utf-8")
-		w.Write(frontendHTML)
-	})
+// readEmbeddedWeb returns a file from the embedded web/ directory (e.g. "index.html").
+func readEmbeddedWeb(name string) ([]byte, error) {
+	return webFS.ReadFile(path.Join("web", name))
 }

@@ -38,18 +38,47 @@ func main() {
 
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.New()
+	router.RedirectTrailingSlash = false
 	router.Use(gin.Logger(), gin.Recovery())
-	router.GET("/sync-data", handler.SyncData)
-	router.POST("/select-song", handler.SelectSong)
-	router.GET("/from", handler.GetFromList)
-	router.GET("/genre", handler.GetGenreList)
-	router.GET("/level", handler.GetLevelList)
-	router.GET("/", gin.WrapH(serveFrontend()))
-	router.GET("/version", func(c *gin.Context) {
-		handler.SuccessWithData(c, gin.H{
-			"version": version,
-		})
+
+	router.GET("/", func(c *gin.Context) {
+		b, err := readEmbeddedWeb("index.html")
+		if err != nil {
+			c.AbortWithStatus(http.StatusNotFound)
+			return
+		}
+		c.Data(http.StatusOK, "text/html; charset=utf-8", b)
 	})
+	router.GET("/app.css", func(c *gin.Context) {
+		b, err := readEmbeddedWeb("app.css")
+		if err != nil {
+			c.AbortWithStatus(http.StatusNotFound)
+			return
+		}
+		c.Data(http.StatusOK, "text/css; charset=utf-8", b)
+	})
+	router.GET("/app.js", func(c *gin.Context) {
+		b, err := readEmbeddedWeb("app.js")
+		if err != nil {
+			c.AbortWithStatus(http.StatusNotFound)
+			return
+		}
+		c.Data(http.StatusOK, "application/javascript; charset=utf-8", b)
+	})
+
+	api := router.Group("/api")
+	{
+		api.GET("/sync-data", handler.SyncData)
+		api.POST("/select-song", handler.SelectSong)
+		api.GET("/from", handler.GetFromList)
+		api.GET("/genre", handler.GetGenreList)
+		api.GET("/level", handler.GetLevelList)
+		api.GET("/version", func(c *gin.Context) {
+			handler.SuccessWithData(c, gin.H{
+				"version": version,
+			})
+		})
+	}
 
 	srv := &http.Server{
 		Addr:              fmt.Sprintf(":%s", port),
