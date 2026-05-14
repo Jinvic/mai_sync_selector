@@ -24,6 +24,16 @@ go build -o mai_sync_selector .
 
 访问 http://localhost:8080
 
+## Docker 部署
+
+```bash
+docker-compose up -d
+```
+
+访问 http://localhost:8080
+
+数据存储在 `./data` 目录。
+
 ## 环境变量
 
 | 变量 | 默认值 | 说明 |
