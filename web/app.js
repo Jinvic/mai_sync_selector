@@ -6,12 +6,10 @@ for (let i = 1; i <= 15; i++) {
   LEVELS.push(i + '+');
 }
 
-let state = {
+const state = {
   fromList: [],
   genreList: [],
   levelList: LEVELS,
-  filter1: { from_list: [], genre_list: [], min_ds: 1.0, max_ds: 15.9, min_level: '', max_level: '' },
-  filter2: { from_list: [], genre_list: [], min_ds: 1.0, max_ds: 15.9, min_level: '', max_level: '' },
   page: 1,
   pageSize: 20,
   total: 0,
@@ -27,17 +25,23 @@ function api(path, options = {}) {
   }).then(r => r.json());
 }
 
+function escapeHtml(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[c]));
+}
+
 function buildFilter(player) {
-  const prefix = player === 1 ? '1' : '2';
-  const minDs = parseFloat(document.getElementById('minDs' + prefix).value) || 1.0;
-  const maxDs = parseFloat(document.getElementById('maxDs' + prefix).value) || 15.9;
+  const p = String(player);
+  const minDs = parseFloat(document.getElementById('minDs' + p).value);
+  const maxDs = parseFloat(document.getElementById('maxDs' + p).value);
   return {
-    from_list: Array.from(document.querySelectorAll('#fromList' + prefix + ' .checkbox-item.checked')).map(el => el.dataset.value),
-    genre_list: Array.from(document.querySelectorAll('#genreList' + prefix + ' .checkbox-item.checked')).map(el => el.dataset.value),
-    min_ds: minDs,
-    max_ds: maxDs,
-    min_level: document.getElementById('minLevel' + prefix).value,
-    max_level: document.getElementById('maxLevel' + prefix).value
+    from_list: Array.from(document.querySelectorAll('#fromList' + p + ' .chip.is-checked')).map(el => el.dataset.value),
+    genre_list: Array.from(document.querySelectorAll('#genreList' + p + ' .chip.is-checked')).map(el => el.dataset.value),
+    min_ds: Number.isFinite(minDs) ? minDs : 1.0,
+    max_ds: Number.isFinite(maxDs) ? maxDs : 15.9,
+    min_level: document.getElementById('minLevel' + p).value,
+    max_level: document.getElementById('maxLevel' + p).value
   };
 }
 
@@ -48,21 +52,28 @@ function fetchSongs() {
     page: state.page,
     page_size: state.pageSize
   };
-  document.getElementById('songTableBody').innerHTML = '<tr class="loading-row"><td colspan="9">加载中...</td></tr>';
+  document.getElementById('songTableBody').innerHTML = '<tr class="loading-row"><td colspan="9">加载中</td></tr>';
   api('/select-song', { method: 'POST', body: JSON.stringify(body) })
     .then(data => {
       if (data.status === 1 && data.data) {
         state.total = data.data.total;
         renderSongList(data.data.song_list);
         renderPagination();
+        updateResultCount();
       } else {
-        const errMsg = data.msg || data.error || JSON.stringify(data);
-        document.getElementById('songTableBody').innerHTML = '<tr class="empty-row"><td colspan="9">加载失败: ' + errMsg + '</td></tr>';
+        const errMsg = escapeHtml(data.msg || data.error || JSON.stringify(data));
+        document.getElementById('songTableBody').innerHTML = '<tr class="empty-row"><td colspan="9">加载失败 · ' + errMsg + '</td></tr>';
       }
     })
     .catch(() => {
       document.getElementById('songTableBody').innerHTML = '<tr class="empty-row"><td colspan="9">网络错误</td></tr>';
     });
+}
+
+function updateResultCount() {
+  const el = document.getElementById('resultCount');
+  if (!el) return;
+  el.innerHTML = '共 <strong>' + state.total + '</strong> 首';
 }
 
 function renderSongList(songs) {
@@ -74,24 +85,24 @@ function renderSongList(songs) {
   tbody.innerHTML = songs.map(song => {
     const dsParts = DIFFICULTIES.map(d => {
       const v = song.ds && song.ds[d];
-      return v !== undefined && v !== null ? `<span class="ds-cell">${v.toFixed(1)}</span>` : '';
-    }).join(' ');
+      if (v === undefined || v === null) return '';
+      return `<span class="ds-pill ${d}">${v.toFixed(1)}</span>`;
+    }).filter(Boolean).join('');
     const levelParts = DIFFICULTIES.map(d => {
       const v = song.level && song.level[d];
       if (!v) return '';
-      const cls = 'level-badge ' + d;
-      return `<span class="${cls}">${v}</span>`;
+      return `<span class="level-badge ${d}">${escapeHtml(v)}</span>`;
     }).join('');
     return `<tr>
-      ${col('cover', `<img class="cover-cell" src="${song.cover_url || ''}" alt="${song.title}" loading="lazy">`)}
-      ${col('title', `<span class="title-cell">${song.title}</span>`)}
-      ${col('artist', `<span class="artist-cell">${song.artist}</span>`)}
-      ${col('ds', dsParts)}
-      ${col('level', levelParts)}
-      ${col('bpm', `<span class="bpm-cell">${song.bpm || '-'}</span>`)}
-      ${col('from', `<span class="from-cell">${song.from || '-'}</span>`)}
-      ${col('genre', `<span class="genre-cell">${song.genre}</span>`)}
-      ${col('type', `<span class="type-cell">${song.type || '-'}</span>`)}
+      ${col('cover', `<img class="cover-cell" src="${escapeHtml(song.cover_url || '')}" alt="" loading="lazy">`)}
+      ${col('title', `<span class="title-cell" title="${escapeHtml(song.title || '')}">${escapeHtml(song.title || '')}</span>`)}
+      ${col('artist', `<span class="artist-cell" title="${escapeHtml(song.artist || '')}">${escapeHtml(song.artist || '')}</span>`)}
+      ${col('ds', `<span class="ds-stack">${dsParts}</span>`)}
+      ${col('level', `<span class="level-stack">${levelParts}</span>`)}
+      ${col('bpm', `<span class="bpm-cell">${song.bpm || '—'}</span>`)}
+      ${col('from', `<span class="from-cell">${escapeHtml(song.from || '—')}</span>`)}
+      ${col('genre', `<span class="genre-cell" title="${escapeHtml(song.genre || '')}">${escapeHtml(song.genre || '')}</span>`)}
+      ${col('type', `<span class="type-cell">${escapeHtml(song.type || '—')}</span>`)}
     </tr>`;
   }).join('');
 }
@@ -101,61 +112,62 @@ function col(name, content) {
 }
 
 function renderPagination() {
-  const totalPages = Math.ceil(state.total / state.pageSize) || 1;
+  const totalPages = Math.max(1, Math.ceil(state.total / state.pageSize));
   const controls = document.getElementById('pageControls');
   const info = document.getElementById('pageInfo');
 
   let btns = '';
-  btns += `<button class="page-btn" id="prevPage" ${state.page <= 1 ? 'disabled' : ''}>上一页</button>`;
+  btns += `<button class="page-btn" id="prevPage" type="button" ${state.page <= 1 ? 'disabled' : ''} aria-label="上一页">‹</button>`;
   const maxBtns = 5;
   let startPage = Math.max(1, state.page - 2);
   let endPage = Math.min(totalPages, startPage + maxBtns - 1);
   if (endPage - startPage < maxBtns - 1) startPage = Math.max(1, endPage - maxBtns + 1);
-  if (startPage > 1) btns += `<button class="page-btn" data-page="1">1</button>`;
-  if (startPage > 2) btns += `<span style="color:var(--text-muted)">...</span>`;
+  if (startPage > 1) btns += `<button class="page-btn" type="button" data-page="1">1</button>`;
+  if (startPage > 2) btns += `<span class="page-ellipsis">…</span>`;
   for (let i = startPage; i <= endPage; i++) {
-    btns += `<button class="page-btn ${i === state.page ? 'active' : ''}" data-page="${i}">${i}</button>`;
+    btns += `<button class="page-btn ${i === state.page ? 'is-active' : ''}" type="button" data-page="${i}">${i}</button>`;
   }
-  if (endPage < totalPages - 1) btns += `<span style="color:var(--text-muted)">...</span>`;
-  if (endPage < totalPages) btns += `<button class="page-btn" data-page="${totalPages}">${totalPages}</button>`;
-  btns += `<button class="page-btn" id="nextPage" ${state.page >= totalPages ? 'disabled' : ''}>下一页</button>`;
+  if (endPage < totalPages - 1) btns += `<span class="page-ellipsis">…</span>`;
+  if (endPage < totalPages) btns += `<button class="page-btn" type="button" data-page="${totalPages}">${totalPages}</button>`;
+  btns += `<button class="page-btn" id="nextPage" type="button" ${state.page >= totalPages ? 'disabled' : ''} aria-label="下一页">›</button>`;
   controls.innerHTML = btns;
-  info.textContent = `共 ${state.total} 首`;
+  info.textContent = `第 ${state.page} / ${totalPages} 页`;
 
   controls.querySelectorAll('.page-btn[data-page]').forEach(btn => {
     btn.addEventListener('click', () => {
-      state.page = parseInt(btn.dataset.page);
+      state.page = parseInt(btn.dataset.page, 10);
       fetchSongs();
     });
   });
-  document.getElementById('prevPage')?.addEventListener('click', () => { if (state.page > 1) { state.page--; fetchSongs(); } });
-  document.getElementById('nextPage')?.addEventListener('click', () => { if (state.page < totalPages) { state.page++; fetchSongs(); } });
+  document.getElementById('prevPage')?.addEventListener('click', () => {
+    if (state.page > 1) { state.page--; fetchSongs(); }
+  });
+  document.getElementById('nextPage')?.addEventListener('click', () => {
+    if (state.page < totalPages) { state.page++; fetchSongs(); }
+  });
 }
 
 function renderLevelSelects() {
   ['1', '2'].forEach(p => {
     const minEl = document.getElementById('minLevel' + p);
     const maxEl = document.getElementById('maxLevel' + p);
-    let opts = '<option value="">不限</option>' + LEVELS.map(l => `<option value="${l}">${l}</option>`).join('');
+    const opts = '<option value="">不限</option>' + LEVELS.map(l => `<option value="${l}">${l}</option>`).join('');
     minEl.innerHTML = opts;
     maxEl.innerHTML = opts;
-    minEl.value = '';
-    maxEl.value = '';
   });
 }
 
-function renderCheckboxList(containerId, items, selected) {
+function renderChipList(containerId, items, selected) {
   const container = document.getElementById(containerId);
   container.innerHTML = items.map(item => {
-    const checked = selected.includes(item) ? 'checked' : '';
-    return `<label class="checkbox-item ${checked}" data-value="${item}">
-      <input type="checkbox" ${checked ? 'checked' : ''}>${item}
+    const checked = selected.includes(item);
+    return `<label class="chip ${checked ? 'is-checked' : ''}" data-value="${escapeHtml(item)}">
+      <input type="checkbox" ${checked ? 'checked' : ''}>${escapeHtml(item)}
     </label>`;
   }).join('');
   container.querySelectorAll('input[type="checkbox"]').forEach(input => {
     input.addEventListener('change', () => {
-      const label = input.parentElement;
-      label.classList.toggle('checked', input.checked);
+      input.parentElement.classList.toggle('is-checked', input.checked);
       triggerSearch();
     });
   });
@@ -169,6 +181,17 @@ function triggerSearch() {
   }, 300);
 }
 
+function setActivePlayer(tab) {
+  const t = String(tab);
+  document.getElementById('playerTabs').dataset.active = t;
+  document.getElementById('filtersViewport').dataset.active = t;
+  document.querySelectorAll('.player-tab').forEach(b => {
+    const on = b.dataset.tab === t;
+    b.classList.toggle('is-active', on);
+    b.setAttribute('aria-selected', on ? 'true' : 'false');
+  });
+}
+
 function setupEventListeners() {
   ['minDs1', 'maxDs1', 'minDs2', 'maxDs2'].forEach(id => {
     document.getElementById(id).addEventListener('input', triggerSearch);
@@ -178,7 +201,7 @@ function setupEventListeners() {
   });
 
   document.getElementById('pageSizeSelect').addEventListener('change', e => {
-    state.pageSize = parseInt(e.target.value);
+    state.pageSize = parseInt(e.target.value, 10);
     state.page = 1;
     fetchSongs();
   });
@@ -186,63 +209,56 @@ function setupEventListeners() {
   document.getElementById('colToggle').querySelectorAll('.col-toggle-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       const col = btn.dataset.col;
-      const wasActive = btn.classList.contains('active');
-      if (wasActive) {
-        btn.classList.remove('active');
-        state.columns[col] = false;
-        document.querySelectorAll(`th[data-col="${col}"], td[data-col="${col}"]`).forEach(el => {
-          el.style.display = 'none';
-        });
-      } else {
-        btn.classList.add('active');
-        state.columns[col] = true;
-        document.querySelectorAll(`th[data-col="${col}"], td[data-col="${col}"]`).forEach(el => {
-          el.style.display = 'table-cell';
-        });
-      }
+      const wasOn = btn.classList.contains('is-on');
+      btn.classList.toggle('is-on', !wasOn);
+      state.columns[col] = !wasOn;
+      const display = wasOn ? 'none' : '';
+      document.querySelectorAll(`th[data-col="${col}"], td[data-col="${col}"]`).forEach(el => {
+        el.style.display = display;
+      });
     });
   });
 
-  document.getElementById('tabBar').querySelectorAll('.tab-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      const tab = btn.dataset.tab;
-      document.getElementById('filter1').classList.toggle('mobile-active', tab === '1');
-      document.getElementById('filter2').classList.toggle('mobile-active', tab === '2');
-    });
+  document.querySelectorAll('.player-tab').forEach(btn => {
+    btn.addEventListener('click', () => setActivePlayer(btn.dataset.tab));
   });
 
   document.getElementById('refreshBtn').addEventListener('click', () => {
-    document.getElementById('refreshBtn').textContent = '同步中...';
-    api('/sync-data').then(data => {
-      document.getElementById('refreshBtn').textContent = '刷新数据';
-      if (data.status === 1) {
-        fetchMeta();
-      }
-    }).catch(() => {
-      document.getElementById('refreshBtn').textContent = '刷新数据';
-    });
+    const btn = document.getElementById('refreshBtn');
+    if (btn.classList.contains('is-syncing')) return;
+    const original = btn.textContent;
+    btn.classList.add('is-syncing');
+    btn.textContent = '同步中…';
+    api('/sync-data')
+      .then(data => {
+        btn.classList.remove('is-syncing');
+        btn.textContent = original;
+        if (data.status === 1) fetchMeta();
+      })
+      .catch(() => {
+        btn.classList.remove('is-syncing');
+        btn.textContent = original;
+      });
   });
 }
 
 function fetchMeta() {
-  Promise.all([api('/version'), api('/from'), api('/genre'), api('/level')]).then(([versionData, fromData, genreData, levelData]) => {
-    if (versionData.data?.version) {
-      document.getElementById('versionDisplay').textContent = versionData.data.version;
-    }
-    state.fromList = fromData.data?.from_list || [];
-    state.genreList = genreData.data?.genre_list || [];
-    state.levelList = levelData.data?.level_list || LEVELS;
-    renderCheckboxList('fromList1', state.fromList, []);
-    renderCheckboxList('genreList1', state.genreList, []);
-    renderCheckboxList('fromList2', state.fromList, []);
-    renderCheckboxList('genreList2', state.genreList, []);
-    renderLevelSelects();
-    fetchSongs();
-  }).catch(() => {
-    document.getElementById('songTableBody').innerHTML = '<tr class="empty-row"><td colspan="9">加载元数据失败，请刷新页面</td></tr>';
-  });
+  Promise.all([api('/version'), api('/from'), api('/genre'), api('/level')])
+    .then(([versionData, fromData, genreData, levelData]) => {
+      const v = versionData.data?.version;
+      if (v) document.getElementById('versionDisplay').textContent = 'v' + String(v).replace(/^v/, '');
+      state.fromList = fromData.data?.from_list || [];
+      state.genreList = genreData.data?.genre_list || [];
+      state.levelList = levelData.data?.level_list || LEVELS;
+      renderChipList('fromList1', state.fromList, []);
+      renderChipList('genreList1', state.genreList, []);
+      renderChipList('fromList2', state.fromList, []);
+      renderChipList('genreList2', state.genreList, []);
+      fetchSongs();
+    })
+    .catch(() => {
+      document.getElementById('songTableBody').innerHTML = '<tr class="empty-row"><td colspan="9">加载元数据失败，请刷新页面</td></tr>';
+    });
 }
 
 function init() {

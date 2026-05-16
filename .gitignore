@@ -1,2 +1,5 @@
 *.db
 *.exe
+
+CLAUDE.md
+.claude/
